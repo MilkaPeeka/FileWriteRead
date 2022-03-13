@@ -18,11 +18,11 @@ ifError(Raise.Exception, Raise.specialException, do.nothing)
 import pathlib
 
 
-class writeToFile:
+class writeFile:
 
     @classmethod
     def Builder(cls, _type):
-        temp = writeToFile()
+        temp = writeFile()
         temp._type = _type
 
         return temp
@@ -73,7 +73,7 @@ class writeToFile:
         else: 
             self.path = pathlib.Path(path)
             if self.path.is_dir():
-                raise Exception("error - path is dir")
+                raise Exception("path is dir")
         
         return self
 
@@ -83,8 +83,8 @@ class writeToFile:
 #        self.writeType = "OnlyIfEmpty"
 #        return self
 
-    def raiseErrorInOverlap(self, error):
-        self.errorOverlap = "this is error will be raised if overlap"
+    def raiseErrorInOverlap(self):
+        self.errorOverlap = "ovelap occured"
         return self
 
     def append(self):
@@ -111,7 +111,7 @@ class writeToFile:
                 raise Exception(self.errorOverlap)
             return self
 
-        self.errorIfNotExist = "Afer checking, the file does not exist"
+        self.errorIfNotExist = "file already exists"
 
         return self
 
@@ -121,7 +121,7 @@ class writeToFile:
                 raise Exception(self.errorOverlap)
             return self
 
-        self.errorIfExists = "after checking, the file does exist"
+        self.errorIfExists = "file not exist"
         return self
 
 
@@ -137,6 +137,33 @@ class writeToFile:
         with open(self.path, self.openType) as outfile:
             outfile.write(self.content)
 
+            return self.content
+
+
+class readFile:
+
+    def __init__(self) -> None:
+        self.path = ""
+        self._type = ""
+        self.errorIfNotExist = ""
+        self.returnNoneIfNotExist = ""
+        self.errorOverlap = ""
+
+    def parse(self):
+
+        with open(self.path, mode='r') as outfile:
+            content = outfile.read()
+
+        if self._type == str:
+            toRet = content.split("STR")[0].split("ENDSTR")[0]
+            return toRet
+
+        if self._type == dict:
+            pass
+
+        if self._type == list:
+            pass
+
         
 
 
@@ -146,8 +173,11 @@ class writeToFile:
 # overwriteIf
 
 
-writeToFile.Builder(list).setContent(["yuval", "hadar"]).setPath("txt.com").overwrite().write()
-
+writeFile.Builder(str).setContent("Yuvali pizponi haya po").setPath("text.txt").overwrite().write()
+with open(pathlib.Path("text.txt"), mode='r') as outfile:
+    content = outfile.read()
+toRet = content.split("STR", maxsplit=1)[-1].split("ENDSTR", maxsplit=1)[0]
+print(toRet)
 """
 FORMATTING:
 
