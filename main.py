@@ -60,10 +60,11 @@ class writeFile:
 
         if self._type == dict:
             for key, value in content.items():
-                toRet+="DICTKEY"
+                toRet+="KEY"
                 toRet+=key
-                toRet+="DICTVALUE"
+                toRet+="VAL"
                 toRet+=value
+                toRet+="PAIR"
             toRet += "ENDDICT"
 
         
@@ -184,17 +185,11 @@ class readFile:
         if self._type == dict:
             toRet = dict()
             for eachDict in filter(None, content.split("ENDDICT")):
-                flag = eachDict.split("DICTKEY", maxsplit=1)
-
-                # while theres more than one pair {Value: Key}
-                while(len(flag) > 1):
-                    key = flag[1].split("DICTVALUE", maxsplit=1)
-                    key1 = key[0]
-                    flag = key[1].split("DICTKEY", maxsplit=1)
-                    value = flag[0]
-
-                    toRet[key1] = value
-
+                for eachPair in filter(None, eachDict.split("PAIR")):
+                    pair = eachPair.split("VAL")
+                    value = pair[1]
+                    key = pair[0].split("KEY")[1]
+                    toRet[key] = value
             return toRet
         if self._type == list:
             toRet = list()
@@ -230,5 +225,5 @@ FORMATTING:
 
 1. str -> STRthis is an example of str \nENDSTR
 2. list -> LISTITEMthis is a list itemLISTITEMthis is a second list itemENDLIST
-3. dict -> DICTKEYAuthDICTVALYubal123ENDDICT
+3. dict -> KEYAuthVALyubal123PAIRENDDICT
 """
