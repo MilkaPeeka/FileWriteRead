@@ -38,6 +38,10 @@ class writeFile:
         self.errorIfExists = ""
         self.errorIfNotExist = ""
         self.errorOverlap = ""
+
+        self.skipIfExists = ""
+        self.skipifNotExists = ""
+
         
     def setContent(self, content):
         toRet = ""
@@ -60,6 +64,7 @@ class writeFile:
                 toRet+=key
                 toRet+="DICTVALUE"
                 toRet+=value
+            toRet += "ENDDICT"
 
         
 
@@ -76,12 +81,6 @@ class writeFile:
                 raise Exception("path is dir")
         
         return self
-
-#    def onlyIfEmpty(self):
-#        if self.writeType:
-#            return self
-#        self.writeType = "OnlyIfEmpty"
-#        return self
 
     def raiseErrorInOverlap(self):
         self.errorOverlap = "ovelap occured"
@@ -141,6 +140,12 @@ class writeFile:
 
 
 class readFile:
+    @classmethod
+    def Builder(cls, _type):
+        toRet = readFile()
+        toRet._type = _type
+
+        return toRet
 
     def __init__(self) -> None:
         self.path = ""
@@ -149,21 +154,55 @@ class readFile:
         self.returnNoneIfNotExist = ""
         self.errorOverlap = ""
 
-    def parse(self):
+        self.assertSameType = ""
+
+    def setPath(self, path):
+        if self.path:
+            if self.errorOverlap:
+                raise Exception(self.errorOverlap)
+        else: 
+            self.path = pathlib.Path(path)
+            if self.path.is_dir():
+                raise Exception("path is dir")
+        
+        return self
+
+    
+    def read(self):
 
         with open(self.path, mode='r') as outfile:
             content = outfile.read()
+        
 
         if self._type == str:
-            toRet = content.split("STR")[0].split("ENDSTR")[0]
+            toRet = str()
+            # if not empty
+            for eachString in filter(None, content.split("ENDSTR")):
+                toRet += eachString.split("STR", 1)[1]
+
             return toRet
-
         if self._type == dict:
-            pass
+            toRet = dict()
+            for eachDict in filter(None, content.split("ENDDICT")):
+                flag = eachDict.split("DICTKEY", maxsplit=1)
 
+                # while theres more than one pair {Value: Key}
+                while(len(flag) > 1):
+                    key = flag[1].split("DICTVALUE", maxsplit=1)
+                    key1 = key[0]
+                    flag = key[1].split("DICTKEY", maxsplit=1)
+                    value = flag[0]
+
+                    toRet[key1] = value
+
+            return toRet
         if self._type == list:
-            pass
-
+            toRet = list()
+            content = filter(None, content.split("LISTEND"))
+            for eachList in content:
+                toRet += list(filter(None, eachList.split("LISTITEM")))
+            
+            return toRet
         
 
 
@@ -174,14 +213,22 @@ class readFile:
 
 
 writeFile.Builder(str).setContent("Yuvali pizponi haya po").setPath("text.txt").overwrite().write()
-with open(pathlib.Path("text.txt"), mode='r') as outfile:
-    content = outfile.read()
-toRet = content.split("STR", maxsplit=1)[-1].split("ENDSTR", maxsplit=1)[0]
-print(toRet)
+res = readFile.Builder(str).setPath("text.txt").read()
+
+writeFile.Builder(dict).setContent({"Yuval": "Hadar", "Lisa":"Hadar", "Shirli": "samuha"}).setPath("text.txt").overwrite().write()
+
+res = readFile.Builder(dict).setPath("text.txt").read()
+print(res)
+
+writeFile.Builder(list).setPath("text.txt").setContent(["1","2","3"]).overwrite().write()
+res = readFile.Builder(list).setPath("text.txt").read()
+print(res)
+
+
 """
 FORMATTING:
 
 1. str -> STRthis is an example of str \nENDSTR
 2. list -> LISTITEMthis is a list itemLISTITEMthis is a second list itemENDLIST
-3. dict -> DICTKEYAuthDICTVALYubal123
+3. dict -> DICTKEYAuthDICTVALYubal123ENDDICT
 """
